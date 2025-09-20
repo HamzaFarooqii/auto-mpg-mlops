@@ -3,23 +3,29 @@ pipeline {
     
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'  // Use your REAL username here
+        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
-    stage('Install Dependencies') {
-    steps {
-        // Use the full Python installation (not Microsoft Store stub)
-        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install --upgrade pip'
-        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install -r requirements.txt'
-    }
-}
-
-stage('Test') {
-    steps {
-        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/ -v'
-    }
-}
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install --upgrade pip'
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install -r requirements.txt'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/ -v'
+            }
+        }
         
         stage('Build Docker Image') {
             steps {
@@ -46,7 +52,7 @@ stage('Test') {
                 }
             }
         }
-    
+    }
     
     post {
         success {
