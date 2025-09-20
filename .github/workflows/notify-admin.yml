@@ -7,10 +7,11 @@ on:
 jobs:
   notify-admin:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Send notification email
       uses: dawidd6/action-send-mail@v3
@@ -36,3 +37,4 @@ jobs:
           
           Best regards,
           MLOps Pipeline
+      continue-on-error: true

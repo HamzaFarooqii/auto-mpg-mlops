@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'  // CHANGE THIS TO YOUR ACTUAL DOCKERHUB USERNAME
+        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
@@ -18,8 +18,9 @@ pipeline {
             steps {
                 script {
                     def dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    dockerImage.push()
-                    dockerImage.push("latest")
+                    // Comment out push for now until credentials are set
+                    // dockerImage.push()
+                    // dockerImage.push("latest")
                 }
             }
         }
