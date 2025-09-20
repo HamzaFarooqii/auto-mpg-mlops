@@ -62,24 +62,4 @@ jobs:
           <p><em>This is an automated notification from the MLOps Pipeline.</em></p>
         html: true
     
-    - name: Send Slack Notification (Optional)
-      if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-      uses: 8398a7/action-slack@v3
-      with:
-        status: success
-        channel: '#mlops'
-        text: |
-          🎉 MLOps Pipeline Deployment Successful!
-          
-          Project: Auto MPG MLOps Pipeline
-          Branch: master
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
-          
-          ✅ All tests passed
-          ✅ Docker image built and pushed
-          ✅ Model deployed successfully
-          
-          Docker Image: hamzafarooqii/auto-mpg-mlops:latest
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    
