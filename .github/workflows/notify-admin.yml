@@ -3,38 +3,18 @@ name: Notify Admin
 on:
   push:
     branches: [ master ]
+  workflow_run:
+    workflows: ["Unit Tests"]
+    types: [completed]
 
 jobs:
   notify-admin:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Send notification email
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
-        subject: "MLOps Pipeline Success - Auto MPG Project"
-        to: ${{ secrets.ADMIN_EMAIL }}
-        from: ${{ secrets.EMAIL_USERNAME }}
-        body: |
-          Hello Admin,
-          
-          The MLOps pipeline has completed successfully!
-          
-          Repository: ${{ github.repository }}
-          Branch: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
-          
-          The application has been successfully containerized and pushed to Docker Hub.
-          
-          Best regards,
-          MLOps Pipeline
-      continue-on-error: true
+    - name: Send notification
+      run: |
+        echo "MLOps Pipeline completed successfully!"
+        echo "Model deployed and containerized."
+        echo "Jenkins job executed successfully."

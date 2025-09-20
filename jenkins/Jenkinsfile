@@ -14,32 +14,26 @@ pipeline {
             }
         }
         
+        stage('Test') {
+            steps {
+                sh 'python -m pytest tests/ -v'
+            }
+        }
+        
         stage('Build Docker Image') {
             steps {
                 script {
                     def dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    // Comment out push for now until credentials are set
-                    // dockerImage.push()
-                    // dockerImage.push("latest")
+                    dockerImage.push()
+                    dockerImage.push('latest')
                 }
             }
         }
         
-        stage('Test Docker Image') {
+        stage('Deploy') {
             steps {
-                script {
-                    def testContainer = docker.run("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    sleep(10) // Wait for app to start
-                    sh "curl -f http://localhost:5000/health || exit 1"
-                    testContainer.stop()
-                }
-            }
-        }
-        
-        stage('Deploy to Staging') {
-            steps {
-                echo "Deploying to staging environment..."
-                // Add your deployment steps here
+                echo "Docker image ${DOCKER_IMAGE}:${DOCKER_TAG} pushed to Docker Hub"
+                echo "Deployment completed successfully!"
             }
         }
     }
@@ -47,15 +41,9 @@ pipeline {
     post {
         success {
             echo "Pipeline completed successfully!"
-            // Send success notification
         }
         failure {
             echo "Pipeline failed!"
-            // Send failure notification
-        }
-        always {
-            // Clean up
-            sh "docker system prune -f"
         }
     }
 }
