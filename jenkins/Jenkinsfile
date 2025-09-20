@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'  // Use your REAL Docker Hub username
+        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
@@ -36,10 +36,17 @@ pipeline {
             }
         }
         
-        stage('Push to Docker Hub') {
+        stage('Login to Docker Hub') {
             steps {
                 script {
                     sh 'echo $DOCKER_HUB_CREDENTIALS | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin'
+                }
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                script {
                     sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
                     sh 'docker push ${DOCKER_IMAGE}:latest'
                 }
@@ -50,6 +57,7 @@ pipeline {
     post {
         success {
             echo "Pipeline completed successfully!"
+            echo "Docker image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
         failure {
             echo "Pipeline failed!"
