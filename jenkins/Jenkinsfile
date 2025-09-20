@@ -2,7 +2,6 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
@@ -29,26 +28,29 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
-                    sh 'docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest'
-                }
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             }
         }
         
-        stage('Login to Docker Hub') {
+        stage('Docker Login and Push') {
             steps {
                 script {
-                    sh 'echo $DOCKER_HUB_CREDENTIALS | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin'
-                }
-            }
-        }
-        
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
-                    sh 'docker push ${DOCKER_IMAGE}:latest'
+                    // Use the credentials with PAT
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials', 
+                        passwordVariable: 'DOCKER_PAT', 
+                        usernameVariable: 'DOCKER_USERNAME'
+                    )]) {
+                        // Login using PAT
+                        bat '''
+                            echo %DOCKER_PAT% | docker login -u %DOCKER_USERNAME% --password-stdin
+                        '''
+                        
+                        // Push images
+                        bat "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        bat "docker push ${DOCKER_IMAGE}:latest"
+                    }
                 }
             }
         }
@@ -57,10 +59,14 @@ pipeline {
     post {
         success {
             echo "Pipeline completed successfully!"
-            echo "Docker image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo "Docker image pushed: ${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
         failure {
             echo "Pipeline failed!"
+        }
+        always {
+            // Cleanup - logout from docker
+            bat 'docker logout || exit 0'
         }
     }
 }
