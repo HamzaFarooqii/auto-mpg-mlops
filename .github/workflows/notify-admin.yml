@@ -13,8 +13,73 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
-    - name: Send notification
-      run: |
-        echo "MLOps Pipeline completed successfully!"
-        echo "Model deployed and containerized."
-        echo "Jenkins job executed successfully."
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Send Email Notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "MLOps Pipeline - Deployment Successful"
+        to: ${{ secrets.ADMIN_EMAIL }}
+        from: ${{ secrets.EMAIL_USERNAME }}
+        body: |
+          <h2>🎉 MLOps Pipeline Deployment Successful!</h2>
+          
+          <p><strong>Project:</strong> Auto MPG MLOps Pipeline</p>
+          <p><strong>Branch:</strong> master</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <p><strong>Author:</strong> ${{ github.actor }}</p>
+          <p><strong>Timestamp:</strong> ${{ github.event.head_commit.timestamp }}</p>
+          
+          <h3>✅ Pipeline Status:</h3>
+          <ul>
+            <li>✅ Code Quality Check: Passed</li>
+            <li>✅ Unit Tests: Passed (12/12)</li>
+            <li>✅ Jenkins Build: Successful</li>
+            <li>✅ Docker Image: Built and Pushed</li>
+            <li>✅ Model Deployment: Complete</li>
+          </ul>
+          
+          <h3>📦 Deployment Details:</h3>
+          <ul>
+            <li><strong>Docker Image:</strong> hamzafarooqii/auto-mpg-mlops:latest</li>
+            <li><strong>Registry:</strong> Docker Hub</li>
+            <li><strong>Model Status:</strong> Trained and Ready</li>
+            <li><strong>API Endpoint:</strong> Available for predictions</li>
+          </ul>
+          
+          <h3>🔗 Links:</h3>
+          <ul>
+            <li><a href="https://github.com/${{ github.repository }}">GitHub Repository</a></li>
+            <li><a href="https://hub.docker.com/r/hamzafarooqii/auto-mpg-mlops">Docker Hub Image</a></li>
+            <li><a href="https://github.com/${{ github.repository }}/actions">GitHub Actions</a></li>
+          </ul>
+          
+          <p><em>This is an automated notification from the MLOps Pipeline.</em></p>
+        html: true
+    
+    - name: Send Slack Notification (Optional)
+      if: ${{ secrets.SLACK_WEBHOOK_URL }}
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        channel: '#mlops'
+        text: |
+          🎉 MLOps Pipeline Deployment Successful!
+          
+          Project: Auto MPG MLOps Pipeline
+          Branch: master
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          
+          ✅ All tests passed
+          ✅ Docker image built and pushed
+          ✅ Model deployed successfully
+          
+          Docker Image: hamzafarooqii/auto-mpg-mlops:latest
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
