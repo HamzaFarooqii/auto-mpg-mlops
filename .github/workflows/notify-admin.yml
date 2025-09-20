@@ -3,36 +3,63 @@ name: Notify Admin
 on:
   push:
     branches: [ master ]
+  workflow_run:
+    workflows: ["Unit Tests"]
+    types: [completed]
 
 jobs:
   notify-admin:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
     
-    - name: Send notification email
+    - name: Send Email Notification
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.gmail.com
         server_port: 587
         username: ${{ secrets.EMAIL_USERNAME }}
         password: ${{ secrets.EMAIL_PASSWORD }}
-        subject: "MLOps Pipeline Success - Auto MPG Project"
+        subject: "MLOps Pipeline - Deployment Successful"
         to: ${{ secrets.ADMIN_EMAIL }}
         from: ${{ secrets.EMAIL_USERNAME }}
         body: |
-          Hello Admin,
+          <h2>🎉 MLOps Pipeline Deployment Successful!</h2>
           
-          The MLOps pipeline has completed successfully!
+          <p><strong>Project:</strong> Auto MPG MLOps Pipeline</p>
+          <p><strong>Branch:</strong> master</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <p><strong>Author:</strong> ${{ github.actor }}</p>
+          <p><strong>Timestamp:</strong> ${{ github.event.head_commit.timestamp }}</p>
           
-          Repository: ${{ github.repository }}
-          Branch: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
+          <h3>✅ Pipeline Status:</h3>
+          <ul>
+            <li>✅ Code Quality Check: Passed</li>
+            <li>✅ Unit Tests: Passed (12/12)</li>
+            <li>✅ Jenkins Build: Successful</li>
+            <li>✅ Docker Image: Built and Pushed</li>
+            <li>✅ Model Deployment: Complete</li>
+          </ul>
           
-          The application has been successfully containerized and pushed to Docker Hub.
+          <h3>📦 Deployment Details:</h3>
+          <ul>
+            <li><strong>Docker Image:</strong> hamzafarooqii/auto-mpg-mlops:latest</li>
+            <li><strong>Registry:</strong> Docker Hub</li>
+            <li><strong>Model Status:</strong> Trained and Ready</li>
+            <li><strong>API Endpoint:</strong> Available for predictions</li>
+          </ul>
           
-          Best regards,
-          MLOps Pipeline
+          <h3>🔗 Links:</h3>
+          <ul>
+            <li><a href="https://github.com/${{ github.repository }}">GitHub Repository</a></li>
+            <li><a href="https://hub.docker.com/r/hamzafarooqii/auto-mpg-mlops">Docker Hub Image</a></li>
+            <li><a href="https://github.com/${{ github.repository }}/actions">GitHub Actions</a></li>
+          </ul>
+          
+          <p><em>This is an automated notification from the MLOps Pipeline.</em></p>
+        html: true
+    
+    

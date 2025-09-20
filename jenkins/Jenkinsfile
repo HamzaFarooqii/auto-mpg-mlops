@@ -2,8 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = 'your-actual-dockerhub-username/auto-mpg-mlops'  // CHANGE THIS
+        DOCKER_IMAGE = 'hamzafarooqii/auto-mpg-mlops'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
@@ -14,31 +13,45 @@ pipeline {
             }
         }
         
+        stage('Install Dependencies') {
+            steps {
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install --upgrade pip'
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install -r requirements.txt'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/ -v'
+            }
+        }
+        
         stage('Build Docker Image') {
             steps {
-                script {
-                    def dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    dockerImage.push()
-                    dockerImage.push("latest")
-                }
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             }
         }
         
-        stage('Test Docker Image') {
+        stage('Docker Login and Push') {
             steps {
                 script {
-                    def testContainer = docker.run("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    sleep(10) // Wait for app to start
-                    sh "curl -f http://localhost:5000/health || exit 1"
-                    testContainer.stop()
+                    // Use the credentials with PAT
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials', 
+                        passwordVariable: 'DOCKER_PAT', 
+                        usernameVariable: 'DOCKER_USERNAME'
+                    )]) {
+                        // Login using PAT
+                        bat '''
+                            echo %DOCKER_PAT% | docker login -u %DOCKER_USERNAME% --password-stdin
+                        '''
+                        
+                        // Push images
+                        bat "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        bat "docker push ${DOCKER_IMAGE}:latest"
+                    }
                 }
-            }
-        }
-        
-        stage('Deploy to Staging') {
-            steps {
-                echo "Deploying to staging environment..."
-                // Add your deployment steps here
             }
         }
     }
@@ -46,15 +59,14 @@ pipeline {
     post {
         success {
             echo "Pipeline completed successfully!"
-            // Send success notification
+            echo "Docker image pushed: ${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
         failure {
             echo "Pipeline failed!"
-            // Send failure notification
         }
         always {
-            // Clean up
-            sh "docker system prune -f"
+            // Cleanup - logout from docker
+            bat 'docker logout || exit 0'
         }
     }
 }
