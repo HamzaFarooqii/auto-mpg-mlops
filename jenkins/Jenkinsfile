@@ -46,7 +46,7 @@ stage('Test') {
                 }
             }
         }
-    }
+    
     
     post {
         success {
