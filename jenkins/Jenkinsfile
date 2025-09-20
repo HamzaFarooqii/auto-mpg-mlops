@@ -7,26 +7,19 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install Dependencies') {
+    stage('Install Dependencies') {
     steps {
-        // Replace with your actual Python path
-        bat 'C:\Users\muham\AppData\Local\Programs\Python\Python312 -m pip install --upgrade pip'
-        bat 'C:\Users\muham\AppData\Local\Programs\Python\Python312 -m pip install -r requirements.txt'
+        // Use the full Python installation (not Microsoft Store stub)
+        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install --upgrade pip'
+        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pip install -r requirements.txt'
     }
 }
-        
-        stage('Test') {
-            steps {
-                sh 'python -m pytest tests/ -v'
-            }
-        }
+
+stage('Test') {
+    steps {
+        bat 'C:\\Users\\muham\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/ -v'
+    }
+}
         
         stage('Build Docker Image') {
             steps {
