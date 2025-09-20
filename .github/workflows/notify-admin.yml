@@ -63,7 +63,7 @@ jobs:
         html: true
     
     - name: Send Slack Notification (Optional)
-      if: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
       uses: 8398a7/action-slack@v3
       with:
         status: success
