@@ -14,6 +14,13 @@ pipeline {
             }
         }
         
+        stage('Install Dependencies') {
+            steps {
+                sh 'python -m pip install --upgrade pip'
+                sh 'pip install -r requirements.txt'
+            }
+        }
+        
         stage('Test') {
             steps {
                 sh 'python -m pytest tests/ -v'
@@ -23,17 +30,20 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    dockerImage.push()
-                    dockerImage.push('latest')
+                    // Check if Docker is available
+                    sh 'docker --version'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
                 }
             }
         }
         
-        stage('Deploy') {
+        stage('Push to Docker Hub') {
             steps {
-                echo "Docker image ${DOCKER_IMAGE}:${DOCKER_TAG} pushed to Docker Hub"
-                echo "Deployment completed successfully!"
+                script {
+                    sh 'echo $DOCKER_HUB_CREDENTIALS | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin'
+                    sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                    sh 'docker push ${DOCKER_IMAGE}:latest'
+                }
             }
         }
     }
